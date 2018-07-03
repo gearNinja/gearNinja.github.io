@@ -1,15 +1,15 @@
 
 $(document).ready(() => {
-    $('#apiForm').on('submit', (e) => {
+    document.getElementById("apiForm").onsubmit = function () {
         let apiText = ($('#apiText').val());
         setApiKey(apiText);
-        e.preventDefault();
-    });
-    $('#searchForm').on('submit', (e) => {
-        let searchText = ($('#searchText').val());
+        return false;
+    }
+    document.getElementById("searchForm").onsubmit = function () {
+        let apiText = ($('#searchText').val());
         getSets(searchText);
-        e.preventDefault();
-    });
+        return false;
+    }
 });
 
 var totalPrice = 0;
