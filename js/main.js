@@ -1,5 +1,10 @@
 
 $(document).ready(() => {
+    $('#apiForm').on('submit', (e) => {
+        let apiText = ($('#apiText').val());
+        setApiKey(apiText);
+        e.preventDefault();
+    });
     $('#searchForm').on('submit', (e) => {
         let searchText = ($('#searchText').val());
         getSets(searchText);
@@ -7,8 +12,11 @@ $(document).ready(() => {
     });
 });
 
-var mykey = config.MY_KEY;
 var totalPrice = 0;
+
+function setApiKey(apiText) {
+    sessionStorage.setItem('api', apiText);
+}
 
 function getSets(searchText) {
     var xhr = new XMLHttpRequest();
@@ -23,6 +31,7 @@ function getSets(searchText) {
 
         }
     }
+    var mykey = sessionStorage.getItem('api');
     xhr.open("GET", "https://cryptic-headland-94862.herokuapp.com/http://brickset.com/api/v2.asmx/getSets?apiKey=" + mykey + "&userHash=&query=" + searchText + "&theme=&subtheme=&setNumber=&year=&owned=&wanted=&orderBy=&pageSize=&pageNumber=&userName=", true);
     xhr.setRequestHeader('Content-Type', 'text/xml');
     xhr.send();
