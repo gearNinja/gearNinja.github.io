@@ -17,15 +17,12 @@
 
         <div class="container">
             <div class="jumbotron">
-                <h3 class="text-center">Search for Lego Set</h3>
-                <form id="searchForm">
-                    <input type="text" placeholder="Search sets..." id="searchText" class="form-control">
-                </form>
+                <h3 class="text-center" id="jumboPrice">Total Price: $0.00</h3>
             </div>
         </div>
 
         <div class="container">
-            <div id="sets" class="row"></div>
+            <div id="set" class="row"></div>
         </div>
 
         <script src="https://code.jquery.com/jquery-3.3.1.min.js"
@@ -33,7 +30,10 @@
             crossorigin="anonymous"></script>
 
         <script src="config.js"></script>
-        <script src='js/main.js'></script>
+        <script src="js/main.js"></script>
+        <script>
+            getSet();
+        </script>
 
     </body>
 </html>
