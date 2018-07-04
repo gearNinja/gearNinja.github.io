@@ -1,21 +1,52 @@
 
 $(document).ready(() => {
-    document.getElementById("apiForm").onsubmit = function () {
+    $('#apiForm').on('submit', (e) => {
         let apiText = ($('#apiText').val());
+        $('#apiForm')[0].reset();
         setApiKey(apiText);
-        return false;
-    }
-    document.getElementById("searchForm").onsubmit = function () {
-        let apiText = ($('#searchText').val());
+        e.preventDefault();
+    });
+    $('#searchForm').on('submit', (e) => {
+        let searchText = ($('#searchText').val());
+        showLoader();
         getSets(searchText);
-        return false;
-    }
+        e.preventDefault();
+    });
 });
 
 var totalPrice = 0;
 
 function setApiKey(apiText) {
+    testApiKey(apiText);
     sessionStorage.setItem('api', apiText);
+}
+
+function testApiKey(apiText) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+                changeKeyStatus(xhr.response);
+            }
+        }
+    }
+    xhr.open("GET", "https://cryptic-headland-94862.herokuapp.com/http://brickset.com/api/v2.asmx/checkKey?apiKey=" + apiText, true);
+    xhr.setRequestHeader('Content-Type', 'text/xml');
+    xhr.send();
+}
+
+function changeKeyStatus(response) {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(response,"text/html");
+    const str = xmlDoc.getElementsByTagName("string")[0];
+    var v = $(validator);
+    if(str.textContent == "OK") {
+        v.text("Valid API Key");
+        v.css('color', 'green');
+    } else {
+        v.text("Invalid API Key");
+        v.css('color', 'red');
+    }
 }
 
 function getSets(searchText) {
@@ -36,8 +67,6 @@ function getSets(searchText) {
     xhr.setRequestHeader('Content-Type', 'text/xml');
     xhr.send();
 }
-
-
 
 function getSetsResponse(response) {
     //console.log(response);
