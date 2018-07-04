@@ -1,17 +1,25 @@
 
 $(document).ready(() => {
-    $('#apiForm').on('submit', (e) => {
-        let apiText = ($('#apiText').val());
-        $('#apiForm')[0].reset();
-        setApiKey(apiText);
+    document.getElementById("apiForm").addEventListener('submit', function (e) {
+        setApiKey(document.getElementById('apiText').value);
         e.preventDefault();
-    });
-    $('#searchForm').on('submit', (e) => {
-        let searchText = ($('#searchText').val());
-        showLoader();
-        getSets(searchText);
+    }, true);
+    // $('#apiForm').on('submit', (e) => {
+    //     let apiText = ($('#apiText').val());
+    //     $('#apiForm')[0].reset();
+    //     setApiKey(apiText);
+    //     e.preventDefault();
+    // });
+    document.getElementById("searchForm").addEventListener('submit', function (e) {
+        getSets(document.getElementById('searchText').value);
         e.preventDefault();
-    });
+    }, true);
+    // $('#searchForm').on('submit', (e) => {
+    //     let searchText = ($('#searchText').val());
+    //     //showLoader();
+    //     getSets(searchText);
+    //     e.preventDefault();
+    // });
 });
 
 var totalPrice = 0;
