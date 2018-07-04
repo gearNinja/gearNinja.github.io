@@ -8,7 +8,7 @@ $(document).ready(() => {
     });
     $('#searchForm').on('submit', (e) => {
         let searchText = ($('#searchText').val());
-        showLoader();
+        //showLoader();
         getSets(searchText);
         e.preventDefault();
     });
