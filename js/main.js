@@ -1,5 +1,9 @@
 
 $(document).ready(() => {
+    var v = $(validator);
+    v.text(sessionStorage.getItem('api'));
+    v.css('color', 'green');
+
     document.getElementById("apiForm").addEventListener('submit', function (e) {
         setApiKey(document.getElementById('apiText').value);
         e.preventDefault();
