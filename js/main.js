@@ -1,29 +1,12 @@
 
-$(document).ready(() => {
-    var v = $(validator);
-    v.text(sessionStorage.getItem('api'));
-    v.css('color', 'green');
-
-    document.getElementById("apiForm").addEventListener('submit', function (e) {
+$('#apiForm').bind("submit", function() {
         setApiKey(document.getElementById('apiText').value);
-        e.preventDefault();
-    }, true);
-    // $('#apiForm').on('submit', (e) => {
-    //     let apiText = ($('#apiText').val());
-    //     $('#apiForm')[0].reset();
-    //     setApiKey(apiText);
-    //     e.preventDefault();
-    // });
-    document.getElementById("searchForm").addEventListener('submit', function (e) {
+        return false;
+});
+
+$('#searchForm').bind("submit", function() {
         getSets(document.getElementById('searchText').value);
-        e.preventDefault();
-    }, true);
-    // $('#searchForm').on('submit', (e) => {
-    //     let searchText = ($('#searchText').val());
-    //     //showLoader();
-    //     getSets(searchText);
-    //     e.preventDefault();
-    // });
+        return false;
 });
 
 var totalPrice = 0;
@@ -92,49 +75,43 @@ function getSetsResponse(response) {
     if(xmlDoc.getElementsByTagName("sets").length == 0) {
         setsNotFound();
     } else {
-        let output = '';
-
-        $.each(xmlDoc.getElementsByTagName("sets"), (index, set) => {
-            //console.log(set);
-            output += `
-                <div class="col-md-3">
-                    <div class="well text-center">
-            `;
-            $.each(set.getElementsByTagName("largeThumbnailURL"), (index, set1) => {
-                output += `
-                    <img src="${set1.innerHTML}">
-                `;
-            })
-            $.each(set.getElementsByTagName("name"), (index, set1) => {
-                output += `
-                    <h5>${set1.innerHTML}</h5>
-                `;
-            })
-            $.each(set.getElementsByTagName("number"), (index, set1) => {
-                output += `
-                    <h6>${set1.innerHTML}</h6>
-                    <a onclick="setSelected('${set1.innerHTML}')" class="btn btn-primary" href="#">Select Set</a>
+        console.log("HI");
+        var thisOutput = '';
+        var sets = xmlDoc.getElementsByTagName("sets");
+        console.log(sets);
+        var setsLength = sets.length;
+        for(var i = 0; i < setsLength; i++) {
+            console.log(sets[i]);
+            var setUrl = sets[i].getElementsByTagName("largeThumbnailURL")[0].innerHTML;
+            var setName = sets[i].getElementsByTagName("name")[0].innerHTML;
+            var setNumber = sets[i].getElementsByTagName("number")[0].innerHTML;
+            console.log(setUrl);
+            thisOutput += `
+                    <div class="col-sm-3">
+                        <div class="well text-center">
+                            <img src="${setUrl}">
+                            <h5>${setName}</h5>
+                            <h6>${setNumber}</h6>
+                            <a onclick="setSelected(${setNumber})" class="btn btn-primary" href="#">Select Set</a>
+                        </div>
                     </div>
-                </div>
-                `;
-            })
-
-        })
-        $('#sets').html(output);
-        //updateDivSize();
+            `;
+        }
+        $('#sets').html(thisOutput);
+        updateDivSize();
     }
 }
 
 function setsNotFound() {
-    let output = '';
-    output += `
+    var thisOutput = '';
+    thisOutput += `
         <div class="col-lg-1">
             <div class="well text-center">
                 <h2>No sets found for search query</h2>
             </div>
         </div>
     `;
-    $('#sets').html(output);
+    $('#sets').html(thisOutput);
 }
 
 function setSelected(id) {
@@ -144,7 +121,7 @@ function setSelected(id) {
 }
 
 function getSet() {
-    let setNumber = sessionStorage.getItem('setNumber');
+    var setNumber = sessionStorage.getItem('setNumber');
 
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
@@ -158,6 +135,7 @@ function getSet() {
 
         }
     }
+    console.log("SET NUMBER: " + setNumber);
     xhr.open("GET", "https://cryptic-headland-94862.herokuapp.com/https://www.bricklink.com/catalogItemInv.asp?S=" + setNumber + "-1&viewItemType=M", true);
     xhr.setRequestHeader('Content-Type', 'text/html');
     xhr.send();
@@ -168,13 +146,14 @@ function getSetResponse(response) {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(response,"text/html");
     console.log(" nodes: " + xmlDoc.getElementsByTagName('tbody').length+"\n\r response.length:" + response.length);
-
-    let output = "";
+    var thisOutput = "";
     const bodies = xmlDoc.getElementsByTagName("tbody");
     const trs = bodies[6].getElementsByTagName("tr");
-    $.each(trs, (index, tr) => {
+    for(var index = 0; index < trs.length; index++) {
+        var tr = trs[index];
+        console.log(tr);
         if(index >= 3) {
-            output += `
+            thisOutput += `
             <div class="col-md-3">
                 <div class="well text-center">
             `;
@@ -183,7 +162,7 @@ function getSetResponse(response) {
             const figName = source.title.split(" ")[2];
             console.log(figName);
             getFigPrice(figName, index);
-            output += `
+            thisOutput += `
                 <img src="https://img.bricklink.com/ItemImage/MN/0/${figName}.png">
                     <a href="https://www.bricklink.com/v2/catalog/catalogitem.page?M=${figName}#T=P" class="btn btn-primary" target="_blank">${figName}</a>
                     <h6 id="fig${index}">$</h6>
@@ -191,13 +170,13 @@ function getSetResponse(response) {
             </div>
             `;
         }
-    })
-    $('#set').html(output);
+    }
+    $('#set').html(thisOutput);
     updateHeight();
 }
 
 function getFigPrice(name, index) {
-    let setNumber = sessionStorage.getItem('setNumber');
+    var setNumber = sessionStorage.getItem('setNumber');
 
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
@@ -229,25 +208,29 @@ function getFigPriceResponse(response, index) {
 }
 
 $(window).resize(updateHeight);
+$(window).resize(updateDivSize);
+
 
 function updateHeight() {
-    var sets = $('#sets img');
+    //var sets = $('#sets img');
     var set = $('#set img');
-    var setsWidth = sets.width();
+    //var setsWidth = sets.width();
     var setWidth = set.width();
 
-    sets.css('height', setsWidth*1.25);
+    //sets.css('height', setsWidth*1.25);
     set.css('height', setWidth*1.25);
 }
 
 function updateDivSize() {
     var div = $('#sets div div');
+    div.css('height', "");
     var max = 0;
-    $.each(div, (index, d) => {
-        if(d.offsetHeight > max) {
-            max = d.offsetHeight
+    for(var index = 0; index < div.length; index++) {
+        if(div[index].offsetHeight > max) {
+            max = div[index].offsetHeight;
+            console.log(div[index].offsetHeight);
         }
-    })
-    console.log(max);
+    }
+    console.log("MAX: " + max);
     div.css('height', max);
 }
