@@ -98,7 +98,7 @@ function getSetsResponse(response) {
             `;
         }
         $('#sets').html(thisOutput);
-        updateDivSize();
+        initialDivSize();
     }
 }
 
@@ -219,6 +219,22 @@ function updateHeight() {
 
     //sets.css('height', setsWidth*1.25);
     set.css('height', setWidth*1.25);
+}
+
+function initialDivSize() {
+    setTimeout(function () {
+        //alert("Hello");
+    }, 2000);
+    var div = $('#sets div div');
+    var max = 0;
+    for(var index = 0; index < div.length; index++) {
+        console.log("HEIGHT " + index + ": " + div[index].offsetHeight);
+        if(div[index].offsetHeight > max) {
+            max = div[index].offsetHeight;
+        }
+    }
+    console.log("MAX: " + max);
+    div.css('height', max);
 }
 
 function updateDivSize() {
