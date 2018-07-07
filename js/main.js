@@ -160,11 +160,15 @@ function getSetResponse(response) {
             const source = tr.getElementsByTagName("td")[0].getElementsByTagName("b")[0].getElementsByTagName("a")[0].getElementsByTagName("img")[0];
             console.log(source.title);
             const figName = source.title.split(" ")[2];
-            console.log(figName);
+            var realFigName = source.title.split(" ")[4];
+            for(var i = 5; i < source.title.split(" ").length; i++) {
+                realFigName += " " + source.title.split(" ")[i];
+            }
+            console.log(realFigName);
             getFigPrice(figName, index);
             thisOutput += `
                 <img src="https://img.bricklink.com/ItemImage/MN/0/${figName}.png">
-                    <a href="https://www.bricklink.com/v2/catalog/catalogitem.page?M=${figName}#T=P" class="btn btn-primary" target="_blank">${figName}</a>
+                    <a href="https://www.bricklink.com/v2/catalog/catalogitem.page?M=${figName}#T=P" class="btn btn-primary" target="_blank">${realFigName}</a>
                     <h6 id="fig${index}">$</h6>
                 </div>
             </div>
