@@ -69,23 +69,22 @@ function getSetsResponse(response) {
     xmlDoc = parser.parseFromString(response,"text/xml");
     //console.log(xmlDoc);
 
-    console.log(" nodes: " + xmlDoc.getElementsByTagName("sets").length+"\n\r response.length:" + response.length);
+    //console.log(" nodes: " + xmlDoc.getElementsByTagName("sets").length+"\n\r response.length:" + response.length);
     //console.log(xmlDoc.getElementsByTagName('node'));
 
     if(xmlDoc.getElementsByTagName("sets").length == 0) {
         setsNotFound();
     } else {
-        console.log("HI");
         var thisOutput = '';
         var sets = xmlDoc.getElementsByTagName("sets");
-        console.log(sets);
+        //console.log(sets);
         var setsLength = sets.length;
         for(var i = 0; i < setsLength; i++) {
-            console.log(sets[i]);
+            //console.log(sets[i]);
             var setUrl = sets[i].getElementsByTagName("largeThumbnailURL")[0].innerHTML;
             var setName = sets[i].getElementsByTagName("name")[0].innerHTML;
             var setNumber = sets[i].getElementsByTagName("number")[0].innerHTML;
-            console.log(setUrl);
+            //console.log(setUrl);
             thisOutput += `
                     <div class="col-sm-3">
                         <div class="well text-center">
@@ -135,40 +134,40 @@ function getSet() {
 
         }
     }
-    console.log("SET NUMBER: " + setNumber);
+    //console.log("SET NUMBER: " + setNumber);
     xhr.open("GET", "https://cryptic-headland-94862.herokuapp.com/https://www.bricklink.com/catalogItemInv.asp?S=" + setNumber + "-1&viewItemType=M", true);
     xhr.setRequestHeader('Content-Type', 'text/html');
     xhr.send();
 }
 
 function getSetResponse(response) {
-    console.log(response);
+    //console.log(response);
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(response,"text/html");
-    console.log(" nodes: " + xmlDoc.getElementsByTagName('tbody').length+"\n\r response.length:" + response.length);
+    //console.log(" nodes: " + xmlDoc.getElementsByTagName('tbody').length+"\n\r response.length:" + response.length);
     var thisOutput = "";
     const bodies = xmlDoc.getElementsByTagName("tbody");
     const trs = bodies[6].getElementsByTagName("tr");
     for(var index = 0; index < trs.length; index++) {
         var tr = trs[index];
-        console.log(tr);
+        //console.log(tr);
         if(index >= 3) {
             thisOutput += `
             <div class="col-md-3">
                 <div class="well text-center">
             `;
             const source = tr.getElementsByTagName("td")[0].getElementsByTagName("b")[0].getElementsByTagName("a")[0].getElementsByTagName("img")[0];
-            console.log(source.title);
+            //console.log(source.title);
             const figName = source.title.split(" ")[2];
             var realFigName = source.title.split(" ")[4];
             for(var i = 5; i < source.title.split(" ").length; i++) {
                 realFigName += " " + source.title.split(" ")[i];
             }
-            console.log(realFigName);
+            //console.log(realFigName);
             getFigPrice(figName, index);
             thisOutput += `
                 <img src="https://img.bricklink.com/ItemImage/MN/0/${figName}.png">
-                    <a href="https://www.bricklink.com/v2/catalog/catalogitem.page?M=${figName}#T=P" class="btn btn-primary" target="_blank">${realFigName}</a>
+                    <a href="https://www.bricklink.com/v2/catalog/catalogitem.page?M=${figName}#T=P" class="btn btn-primary" target="_blank">${figName}</a>
                     <h6 id="fig${index}">$</h6>
                 </div>
             </div>
@@ -198,17 +197,48 @@ function getFigPrice(name, index) {
 function getFigPriceResponse(response, index) {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(response,"text/html");
-    console.log(" nodes: " + xmlDoc.getElementsByTagName('tbody').length+"\n\r response.length:" + response.length);
+    //console.log(" nodes: " + xmlDoc.getElementsByTagName('tbody').length+"\n\r response.length:" + response.length);
     const box = xmlDoc.getElementsByTagName('tbody')[11];
     const price = box.getElementsByTagName('tr')[0].getElementsByTagName('td')[0].getElementsByTagName('table')[0].getElementsByTagName('tbody')[0].getElementsByTagName('tr')[3].getElementsByTagName('td')[1].getElementsByTagName('b')[0].textContent;
-    console.log(price.split(" ")[1]);
+    //console.log(price.split(" ")[1]);
     const actualPrice = price.split(" ")[1];
     const hs = document.getElementsByTagName("h6");
-    console.log(hs);
+    //console.log(hs);
     document.getElementById("fig" + index).innerHTML = actualPrice;
     totalPrice += parseFloat(actualPrice.substring(1));
-    console.log(totalPrice);
-    document.getElementById("jumboPrice").innerHTML = "Total Price: $" + Math.round(totalPrice * 100) / 100;
+    //console.log(totalPrice);
+    document.getElementById("jumboPrice").innerHTML = "Total Minifigure Price: $" + Math.round(totalPrice * 100) / 100;
+}
+
+function getPartOutValue() {
+    var setNumber = sessionStorage.getItem('setNumber');
+
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4) {
+            if (xhr.status == 200) {
+                getPartOutValueResponse(xhr.response);
+            } else {
+                setsNotFound();
+            }
+        } else {
+
+        }
+    }
+    //console.log("SET NUMBER: " + setNumber);
+    xhr.open("GET", "https://cryptic-headland-94862.herokuapp.com/https://www.bricklink.com/catalogPOV.asp?itemType=S&itemNo=" + setNumber + "&itemSeq=1&itemQty=1&breakType=M&itemCondition=N&incInstr=Y", true);
+    xhr.setRequestHeader('Content-Type', 'text/html');
+    xhr.send();
+}
+
+function getPartOutValueResponse(response) {
+    //console.log(response);
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(response,"text/html");
+    console.log(" nodes: " + xmlDoc.getElementsByTagName('tbody').length+"\n\r response.length:" + response.length);
+    var thisOutput = "";
+    const partOutPrice = xmlDoc.getElementsByTagName("font")[5].getElementsByTagName("b")[0].textContent.split("$")[1];
+    document.getElementById("jumboTotalPrice").innerHTML = "Total Part-Out Price: $" + partOutPrice;
 }
 
 $(window).resize(updateHeight);
