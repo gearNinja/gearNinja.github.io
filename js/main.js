@@ -1,12 +1,19 @@
 
+document.addEventListener("DOMContentLoaded", function(event) {
+    var mykey = sessionStorage.getItem('api');
+    if(mykey != null && (window.location.pathname == '/' || window.location.pathname == '/index.html')){
+        testApiKey(mykey);
+    }
+});
+
 $('#apiForm').bind("submit", function() {
-        setApiKey(document.getElementById('apiText').value);
-        return false;
+    setApiKey(document.getElementById('apiText').value);
+    return false;
 });
 
 $('#searchForm').bind("submit", function() {
-        getSets(document.getElementById('searchText').value);
-        return false;
+    getSets(document.getElementById('searchText').value);
+    return false;
 });
 
 var totalPrice = 0;
@@ -79,25 +86,39 @@ function getSetsResponse(response) {
         var sets = xmlDoc.getElementsByTagName("sets");
         //console.log(sets);
         var setsLength = sets.length;
+        console.log(setsLength);
+        var addedCount = 0;
         for(var i = 0; i < setsLength; i++) {
-            //console.log(sets[i]);
-            var setUrl = sets[i].getElementsByTagName("largeThumbnailURL")[0].innerHTML;
-            var setName = sets[i].getElementsByTagName("name")[0].innerHTML;
-            var setNumber = sets[i].getElementsByTagName("number")[0].innerHTML;
-            //console.log(setUrl);
-            thisOutput += `
-                    <div class="col-sm-3">
-                        <div class="well text-center">
-                            <img src="${setUrl}">
-                            <h5>${setName}</h5>
-                            <h6>${setNumber}</h6>
-                            <a onclick="setSelected(${setNumber})" class="btn btn-primary" href="#">Select Set</a>
-                        </div>
-                    </div>
-            `;
+            console.log(sets[i].getElementsByTagName("largeThumbnailURL").length);
+            if(sets[i].getElementsByTagName("largeThumbnailURL").length == 1) {
+                var setUrl = sets[i].getElementsByTagName("largeThumbnailURL")[0].innerHTML;
+                var setName = sets[i].getElementsByTagName("name")[0].innerHTML;
+                var setNumber = sets[i].getElementsByTagName("number")[0].innerHTML;
+                var numFigs = sets[i].getElementsByTagName("minifigs")[0].innerHTML;
+                console.log(numFigs);
+                if(numFigs > 0 || numFigs == "") {
+                    thisOutput += `
+                            <div class="col-sm-3">
+                                <div class="well text-center">
+                                    <img src="${setUrl}">
+                                    <h5>${setName}</h5>
+                                    <h6>${setNumber}</h6>
+                                    <a onclick="setSelected(${setNumber})" class="btn btn-primary" href="#">Select Set</a>
+                                </div>
+                            </div>
+                    `;
+                    addedCount += 1;
+                }
+            }
         }
-        $('#sets').html(thisOutput);
-        initialDivSize();
+        if(addedCount > 0) {
+            $('#sets').html(thisOutput);
+            setTimeout(function () {
+                initialDivSize();
+            }, 200);
+        } else {
+            setsNotFound();
+        }
     }
 }
 
@@ -106,7 +127,7 @@ function setsNotFound() {
     thisOutput += `
         <div class="col-lg-1">
             <div class="well text-center">
-                <h2>No sets found for search query</h2>
+                <h2>No sets with minifigures found for search query</h2>
             </div>
         </div>
     `;
@@ -157,18 +178,21 @@ function getSetResponse(response) {
                 <div class="well text-center">
             `;
             const source = tr.getElementsByTagName("td")[0].getElementsByTagName("b")[0].getElementsByTagName("a")[0].getElementsByTagName("img")[0];
-            //console.log(source.title);
+            const quantity = tr.getElementsByTagName("td")[1].innerHTML.split(";")[1].split("&")[0];
+            console.log(quantity);
             const figName = source.title.split(" ")[2];
-            var realFigName = source.title.split(" ")[4];
-            for(var i = 5; i < source.title.split(" ").length; i++) {
-                realFigName += " " + source.title.split(" ")[i];
-            }
-            //console.log(realFigName);
-            getFigPrice(figName, index);
+            console.log(source);
+            var realFigName = source.title.split(": ")[2];
+            // for(var i = 5; i < source.title.split(" ").length; i++) {
+            //     realFigName += " " + source.title.split(" ")[i];
+            // }
+            console.log(realFigName);
+            getFigPrice(figName, index, quantity);
             thisOutput += `
-                <img src="https://img.bricklink.com/ItemImage/MN/0/${figName}.png">
-                    <a href="https://www.bricklink.com/v2/catalog/catalogitem.page?M=${figName}#T=P" class="btn btn-primary" target="_blank">${figName}</a>
-                    <h6 id="fig${index}">$</h6>
+                    <img src="https://img.bricklink.com/ItemImage/MN/0/${figName}.png">
+                    <h5>${realFigName}</h5>
+                    <h5 id="fig${index}">$</h5>
+                    <a href="https://www.bricklink.com/v2/catalog/catalogitem.page?M=${figName}#T=P" class="btn btn-primary" target="_blank">Bricklink</a>
                 </div>
             </div>
             `;
@@ -176,16 +200,19 @@ function getSetResponse(response) {
     }
     $('#set').html(thisOutput);
     updateHeight();
+    setTimeout(function () {
+        updateFigSize();
+    }, 200);
 }
 
-function getFigPrice(name, index) {
+function getFigPrice(name, index, quantity) {
     var setNumber = sessionStorage.getItem('setNumber');
 
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
             if (xhr.status == 200) {
-                getFigPriceResponse(xhr.response, index);
+                getFigPriceResponse(xhr.response, index, quantity);
             }
         }
     }
@@ -194,7 +221,7 @@ function getFigPrice(name, index) {
     xhr.send();
 }
 
-function getFigPriceResponse(response, index) {
+function getFigPriceResponse(response, index, quantity) {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(response,"text/html");
     //console.log(" nodes: " + xmlDoc.getElementsByTagName('tbody').length+"\n\r response.length:" + response.length);
@@ -204,8 +231,13 @@ function getFigPriceResponse(response, index) {
     const actualPrice = price.split(" ")[1];
     const hs = document.getElementsByTagName("h6");
     //console.log(hs);
-    document.getElementById("fig" + index).innerHTML = actualPrice;
-    totalPrice += parseFloat(actualPrice.substring(1));
+    if(quantity > 1) {
+        document.getElementById("fig" + index).innerHTML = (actualPrice + "\t(x" + quantity + ")");
+    } else {
+        document.getElementById("fig" + index).innerHTML = actualPrice;
+
+    }
+    totalPrice += (parseFloat(actualPrice.substring(1)) * quantity);
     //console.log(totalPrice);
     document.getElementById("jumboPrice").innerHTML = "Total Minifigure Price: $" + Math.round(totalPrice * 100) / 100;
 }
@@ -255,10 +287,20 @@ function updateHeight() {
     set.css('height', setWidth*1.25);
 }
 
+function updateFigSize() {
+    var div = $('#set div div');
+    var max = 0;
+    for(var index = 0; index < div.length; index++) {
+        console.log("HEIGHT " + index + ": " + div[index].offsetHeight);
+        if(div[index].offsetHeight > max) {
+            max = div[index].offsetHeight;
+        }
+    }
+    console.log("MAX: " + max);
+    div.css('height', max);
+}
+
 function initialDivSize() {
-    setTimeout(function () {
-        //alert("Hello");
-    }, 2000);
     var div = $('#sets div div');
     var max = 0;
     for(var index = 0; index < div.length; index++) {
